@@ -9,6 +9,7 @@ from ecdsa.util import sigencode_der, sigdecode_der
 import base64
 import hashlib
 import binascii
+import codecs
 from pprint import pprint
 from collections import OrderedDict
 from ecdsa import ellipticcurve, NIST256p, SigningKey, VerifyingKey
@@ -192,6 +193,19 @@ class XuperSDK(object):
             raise Exception(rsps_obj)
         return rsps.content
 
+    def query_tx(self, txid):
+        payload = {
+            'bcname':self.bcname,
+            'header':{'logid':'pysdk_query_tx'+str(int(time.time()*1e6)) },
+            'txid': codecs.encode(codecs.decode(txid, 'hex'), 'base64').decode()
+        } 
+        rsps = requests.post(self.url + "/v1/query_tx", data = json.dumps(payload))
+        rsps_obj = json.loads(rsps.content)
+        if 'error' in rsps_obj['header']:
+            raise Exception(rsps_obj['header'])
+        rsps_obj = json.loads(rsps.content)
+        return rsps_obj['tx']
+        
     def invoke(self, contract, method, args, module="wasm"):
         rsps = self.preexec(contract, method, args, module)
         preexec_result = json.loads(rsps)
@@ -210,8 +224,8 @@ class XuperSDK(object):
                     res_limit['type'] = ResTypeEnum[res_limit['type']]
                 if 'limit' in res_limit:
                     res_limit['limit'] = int(res_limit['limit'])
-        self.transfer('$', int(fee)+10, '', contract_info)
-        return [base64.b64decode(x) for x in return_msg], int(fee)
+        txid = self.transfer('$', int(fee)+10, '', contract_info)
+        return [base64.b64decode(x) for x in return_msg], int(fee), txid
 
     def new_account(self, account_name=None, acl=None):
         if account_name == None:
@@ -305,15 +319,16 @@ class XuperSDK(object):
         self.sign_tx(tx)
         #print(json.dumps(tx))
         res = self.post_tx(tx)
-        print("txid:", binascii.hexlify(base64.b64decode(tx['txid'])).decode())
-        
-        
+        return codecs.encode(codecs.decode(tx['txid'].encode(),'base64'), 'hex').decode()
 
 if __name__ == "__main__":
     pysdk = XuperSDK("http://localhost:8098", "xuper")
     pysdk.readkeys("./data/keys")
 
-    pysdk.transfer("bob", 88888, desc="hello world")
+    txid = pysdk.transfer("bob", 88888, desc="hello world")
+    print("txid", txid)
+    tx = pysdk.query_tx(txid)
+    print(tx)
     rsps = pysdk.preexec("counter", "get", {"key":b"counter"})
     print(rsps.decode())
     rsps = pysdk.invoke("counter", "increase", {"key":b"counter"})
