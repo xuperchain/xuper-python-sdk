@@ -1,7 +1,8 @@
 # pythonsdk
 
 # requirements
-    python3.x
+    python2.7 python3.x
+
     pip install ecdsa
     pip install requests
   
