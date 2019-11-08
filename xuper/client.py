@@ -60,7 +60,14 @@ def to_bytes(n, length=32, endianess='big'):
     return s if endianess == 'big' else s[::-1]
 
 class XuperSDK(object):
-    def __init__(self, url, bcname):
+    """
+    XuperSDK is a pure python sdk for xuperchain
+    """
+    def __init__(self, url, bcname = 'xuper'):
+        """
+        url is the address of xuperchain http gateway
+        bcname is the chain name. e.g. xuper
+        """
         self.url = url
         self.bcname = bcname
         self.address = ""
@@ -144,6 +151,10 @@ class XuperSDK(object):
             return self.address
     
     def sign_tx(self, tx):
+        """
+        must call read_keys to read private key first
+        sign tx with private key, set signature in tx
+        """
         raw = self.__encodeTx(tx, False)
         #print(raw.decode())
         s = self.private_key.sign(raw, hashfunc=double_sha256, sigencode=sigencode_der)
@@ -153,6 +164,9 @@ class XuperSDK(object):
         tx['txid'] = base64.b64encode(txid).decode()
     
     def readkeys(self, path):
+        """
+        read private keys from a directory, which must containser private.key, address and public.key
+        """
         self.address = open(path + "/address").read()
         self.private_key_js = open(path + "/private.key").read()
         self.public_key_js = open(path + "/public.key").read()
@@ -166,6 +180,9 @@ class XuperSDK(object):
         #print(self.private_key.privkey.public_key.point.y())
 
     def post_tx(self, tx):
+        """
+        broadcast a tx to xchain node
+        """
         payload = {
             'bcname':self.bcname,
             'header':{'logid':'pysdk_post_tx'+str(int(time.time()*1e6)) },
@@ -180,6 +197,13 @@ class XuperSDK(object):
         return rsps.content
 
     def preexec(self, contract, method, args, module="wasm"):
+        """
+        pre-execute a contract, and get response which contains inputs,outputs and response of contract"
+        contract:  contract name
+        method: method name
+        args: contract args
+        module: contract module, default is wasm
+        """
         payload = {
             'bcname':self.bcname,
             'header':{'logid':'pysdk_preexec'+str(int(time.time())*1e6)},
@@ -201,6 +225,9 @@ class XuperSDK(object):
         return rsps.content
 
     def query_tx(self, txid):
+        """
+        query a transaction by txid (hex format)
+        """
         payload = {
             'bcname':self.bcname,
             'header':{'logid':'pysdk_query_tx'+str(int(time.time()*1e6)) },
@@ -213,7 +240,32 @@ class XuperSDK(object):
         rsps_obj = json.loads(rsps.content)
         return rsps_obj['tx']
         
+    def get_block(self, blockid):
+        """
+        get a block by blockid (hex format)
+        """
+        payload = {
+            'bcname':self.bcname,
+            'header':{'logid':'pysdk_get_block'+str(int(time.time()*1e6)) },
+            'blockid': codecs.encode(codecs.decode(blockid, 'hex'), 'base64').decode(),
+            'need_content': True
+        } 
+        rsps = requests.post(self.url + "/v1/get_block", data = json.dumps(payload))
+        rsps_obj = json.loads(rsps.content)
+        if 'error' in rsps_obj['header']:
+            raise Exception(rsps_obj['header'])
+        rsps_obj = json.loads(rsps.content)
+        print(rsps_obj)
+        return rsps_obj['block']
+
     def invoke(self, contract, method, args, module="wasm"):
+        """
+        invoke a contract, then the state update will take effect on chain
+        contract: contract name
+        method: method name
+        args:  contract args 
+        module: module name, default: wasm
+        """
         rsps = self.preexec(contract, method, args, module)
         preexec_result = json.loads(rsps,object_pairs_hook=OrderedDict)
         return_msg = preexec_result['response']['response']
@@ -235,6 +287,10 @@ class XuperSDK(object):
         return InvokeResponse([base64.b64decode(x) for x in return_msg], int(fee), txid)
 
     def new_account(self, account_name=None, acl=None):
+        """
+        create a new contract account
+        account_name: name of the contract, should be 16 digits, if it is None, a random account will be generated  
+        """
         if account_name == None:
             account_name = str(random.randint(0,9999999999999999)).zfill(16)
         if acl == None:
@@ -251,9 +307,16 @@ class XuperSDK(object):
         return "XC"+account_name+"@"+self.bcname
 
     def set_account(self, account_name):
+        """
+        set the account name represented by this SDK instance
+        """
         self.account_name = account_name
 
     def deploy(self, account_name, contract_name, code, init_args, runtime="c"):
+        """
+        deploy a contract, only C runtime supported
+        code: wasm binary
+        """
         runtime_desc = {
             "c":b"\n\x01c",
             "go":b"TODO"
@@ -271,6 +334,9 @@ class XuperSDK(object):
         return self.invoke('','Deploy', args, 'xkernel')
 
     def balance(self, address = None):
+        """
+        get balance of an address or account
+        """
         if address == None:
             address = self.address
         payload = {
@@ -282,6 +348,13 @@ class XuperSDK(object):
         return balance['bcs'][0]['balance']
 
     def transfer(self, to_address, amount, desc='', contract_info = None):
+        """
+        transfer token to another address
+        to_address: receiver
+        amount: how much to be transfered
+        desc: note 
+        contract_info: only needed when a contract is invoked. using invoke instead, if in that case
+        """
         payload = {
             'bcname':self.bcname,
             'address': self.__my_address(),
