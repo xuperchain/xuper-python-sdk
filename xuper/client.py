@@ -315,11 +315,15 @@ class XuperSDK(object):
     def deploy(self, account_name, contract_name, code, init_args, runtime="c"):
         """
         deploy a contract, only C runtime supported
+        account_name: account name
+        contract_name: contract name
         code: wasm binary
+        init_args: init call args
+        runtime: runtime for wasm, e.g. "c" or "go"
         """
         runtime_desc = {
             "c":b"\n\x01c",
-            "go":b"TODO"
+            "go":b"\n\x02go"
         }
         js_init_args = go_style_dumps(
             OrderedDict([(k,base64.b64encode(init_args[k]).decode()) for k in sorted(init_args.keys())])
