@@ -3,10 +3,11 @@
 # requirements
     python2.7 python3.x
 
-    pip install ecdsa
-    pip install requests
+    ecdsa
+    requests
   
 # quick start
+    pip install xuper
 
 ## start server
     nohup ./xchain &
