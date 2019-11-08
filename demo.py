@@ -10,6 +10,7 @@ pysdk.readkeys("./data/keys")
 
 #1. 普通转账
 pysdk.transfer("bob", 88888, desc="hello world")
+print(pysdk.balance("bob"))
 
 #2. 创建合约账号
 new_account_name = pysdk.new_account()
@@ -35,4 +36,5 @@ print(rsps.decode())
 for i in range(5):
         rsps = pysdk.invoke(contract_name, "increase", {"key":b"counter"})
         print(rsps)
+        print(pysdk.balance(new_account_name))
 

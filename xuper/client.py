@@ -11,7 +11,7 @@ import hashlib
 import binascii
 import codecs
 from pprint import pprint
-from collections import OrderedDict
+from collections import OrderedDict, namedtuple
 from ecdsa import ellipticcurve, NIST256p, SigningKey, VerifyingKey
 
 TxTemplate = '''
@@ -44,6 +44,8 @@ ResTypeEnum = {
     "DISK":2,
     "XFEE":3
 }
+
+InvokeResponse = namedtuple('InvokeResponse', ['result', 'fee', 'txid'])
 
 def double_sha256(data):
     s1 = hashlib.sha256(data).digest()
@@ -230,7 +232,7 @@ class XuperSDK(object):
                 if 'limit' in res_limit:
                     res_limit['limit'] = int(res_limit['limit'])
         txid = self.transfer('$', int(fee)+10, '', contract_info)
-        return [base64.b64decode(x) for x in return_msg], int(fee), txid
+        return InvokeResponse([base64.b64decode(x) for x in return_msg], int(fee), txid)
 
     def new_account(self, account_name=None, acl=None):
         if account_name == None:
@@ -267,6 +269,17 @@ class XuperSDK(object):
             'init_args':js_init_args.encode()
         }       
         return self.invoke('','Deploy', args, 'xkernel')
+
+    def balance(self, address = None):
+        if address == None:
+            address = self.address
+        payload = {
+            'bcs':[{'bcname':self.bcname}],
+            'address': address
+        }
+        balance_response = requests.post(self.url + "/v1/get_balance", data = json.dumps(payload))
+        balance = json.loads(balance_response.content)
+        return balance['bcs'][0]['balance']
 
     def transfer(self, to_address, amount, desc='', contract_info = None):
         payload = {
