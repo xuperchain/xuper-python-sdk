@@ -5,7 +5,7 @@ A pure python sdk for XuperChain
 """
 
 setup(name='xuper',
-      version='0.02',
+      version='0.03',
       description='Pure Python SDK for XuperChain',
       long_description=LONGDOC,
       author='Sun, Junyi',
