@@ -12,7 +12,10 @@
 ## start server
     nohup ./xchain &
     nohup ./xchain-httpgw &
-  
+
+## A wallet demo on python sdk
+![WalletDemo](https://github.com/xuperchain/pythonsdk/blob/master/images/wallet.png)
+
 ## Demo of python SDK
   ```
   pysdk = xuper.XuperSDK("http://localhost:8098", "xuper")
