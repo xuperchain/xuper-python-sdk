@@ -149,6 +149,12 @@ class XuperSDK(object):
             return self.account_name + "/" + self.address
         else:
             return self.address
+
+    def __check_error(self, rsps_obj):
+        if 'error' in rsps_obj:
+            raise Exception(rsps_obj['error'])
+        if 'error' in rsps_obj['header']:
+            raise Exception(rsps_obj['header'])
     
     def sign_tx(self, tx):
         """
@@ -192,8 +198,7 @@ class XuperSDK(object):
         #print(json.dumps(payload))
         rsps = requests.post(self.url + "/v1/post_tx", data = json.dumps(payload))
         rsps_obj = json.loads(rsps.content)
-        if 'error' in rsps_obj['header']:
-            raise Exception(rsps_obj['header'])
+        self.__check_error(rsps_obj)
         return rsps.content
 
     def preexec(self, contract, method, args, module="wasm"):
@@ -220,8 +225,7 @@ class XuperSDK(object):
         }
         rsps = requests.post(self.url + "/v1/preexec", data = json.dumps(payload, sort_keys=False))
         rsps_obj = json.loads(rsps.content)
-        if 'error' in rsps_obj:
-            raise Exception(rsps_obj)
+        self.__check_error(rsps_obj)
         return rsps.content
 
     def query_tx(self, txid):
@@ -235,9 +239,7 @@ class XuperSDK(object):
         } 
         rsps = requests.post(self.url + "/v1/query_tx", data = json.dumps(payload))
         rsps_obj = json.loads(rsps.content)
-        if 'error' in rsps_obj['header']:
-            raise Exception(rsps_obj['header'])
-        rsps_obj = json.loads(rsps.content)
+        self.__check_error(rsps_obj)
         return rsps_obj['tx']
         
     def get_block(self, blockid):
@@ -252,11 +254,35 @@ class XuperSDK(object):
         } 
         rsps = requests.post(self.url + "/v1/get_block", data = json.dumps(payload))
         rsps_obj = json.loads(rsps.content)
-        if 'error' in rsps_obj['header']:
-            raise Exception(rsps_obj['header'])
-        rsps_obj = json.loads(rsps.content)
-        print(rsps_obj)
+        self.__check_error(rsps_obj)
         return rsps_obj['block']
+
+    def system_status(self):
+        """
+        get system status
+        """
+        payload = {
+            'header':{'logid':'pysdk_system_status'+str(int(time.time()*1e6)) },
+        } 
+        rsps = requests.post(self.url + "/v1/get_sysstatus", data = json.dumps(payload))
+        rsps_obj = json.loads(rsps.content)
+        self.__check_error(rsps_obj)
+        return rsps_obj['systems_status']
+
+    def get_block_by_height(self, height):
+        """
+        get a block by block height
+        """
+        payload = {
+            'bcname':self.bcname,
+            'header':{'logid':'pysdk_get_block_by_height'+str(int(time.time()*1e6)) },
+            'height': height
+        } 
+        rsps = requests.post(self.url + "/v1/get_block_by_height", data = json.dumps(payload))
+        rsps_obj = json.loads(rsps.content)
+        self.__check_error(rsps_obj)
+        return rsps_obj['block']
+
 
     def invoke(self, contract, method, args, module="wasm"):
         """
@@ -368,8 +394,7 @@ class XuperSDK(object):
         }   
         select_response = requests.post(self.url + "/v1/select_utxos_v2", data = json.dumps(payload))
         selected_obj = json.loads(select_response.content)  
-        if 'error' in selected_obj['header']:
-            raise Exception(selected_obj['header'])
+        self.__check_error(selected_obj)
         tx = json.loads(TxTemplate)
         #pprint(selected_obj)
         tx['tx_inputs'] = selected_obj['utxoList']

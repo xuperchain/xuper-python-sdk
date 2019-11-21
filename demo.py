@@ -8,6 +8,9 @@ import random
 pysdk = xuper.XuperSDK("http://localhost:8098", "xuper")
 pysdk.readkeys("./data/keys")
 
+#0. 系统状态
+print(pysdk.system_status())
+
 #1. 普通转账
 pysdk.transfer("bob", 88888, desc="hello world")
 print(pysdk.balance("bob"))
@@ -15,7 +18,7 @@ print(pysdk.balance("bob"))
 #2. 创建合约账号
 new_account_name = pysdk.new_account()
 print("wait acl confirmed....")
-time.sleep(3)
+time.sleep(4)
 print("new account:", new_account_name)
 
 #3. 部署合约
