@@ -295,7 +295,10 @@ class XuperSDK(object):
         rsps = self.preexec(contract, method, args, module)
         preexec_result = json.loads(rsps,object_pairs_hook=OrderedDict)
         return_msg = preexec_result['response']['response']
-        fee = preexec_result['response']['gas_used']
+        if 'gas_used' in preexec_result['response'].keys():
+            fee = preexec_result['response']['gas_used']
+        else:
+            fee = 0
         if 'outputs' not in preexec_result['response']:
             return [base64.b64decode(x) for x in return_msg], int(fee)
         contract_info = {}
