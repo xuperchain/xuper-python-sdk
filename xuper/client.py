@@ -171,11 +171,11 @@ class XuperSDK(object):
                 self.__format_obj(v)
             else:
                 if k in ['txid','blockid', 'ref_txid','pre_hash', 'proposer','tip_blockid', 'root_blockid']:
-                    obj[k] = codecs.encode(codecs.decode(v, 'base64'), 'hex').decode()
+                    obj[k] = codecs.encode(codecs.decode(v.encode(), 'base64'), 'hex').decode()
                 elif k in ['from_addr', 'to_addr']:
-                    obj[k] = codecs.decode(v, 'base64')
+                    obj[k] = codecs.decode(v.encode(), 'base64')
                 elif k in ['amount']:
-                    obj[k] = int(codecs.encode(codecs.decode(v, 'base64'), 'hex'), 16)
+                    obj[k] = int(codecs.encode(codecs.decode(v.encode(), 'base64'), 'hex'), 16)
         return obj
 
     def sign_tx(self, tx):
