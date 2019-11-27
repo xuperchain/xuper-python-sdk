@@ -156,6 +156,28 @@ class XuperSDK(object):
         if 'error' in rsps_obj['header']:
             raise Exception(rsps_obj['header'])
     
+    def __format_list(self, ary):
+        for sub_item in ary:
+            self.__format_obj(sub_item)
+        return ary
+
+    def __format_obj(self, obj):
+        if type(obj) is not dict:
+            return obj
+        for k,v in obj.items():
+            if type(v) is list:
+                self.__format_list(v)
+            elif type(v) is dict:
+                self.__format_obj(v)
+            else:
+                if k in ['txid','blockid', 'ref_txid','pre_hash', 'proposer','tip_blockid', 'root_blockid']:
+                    obj[k] = codecs.encode(codecs.decode(v, 'base64'), 'hex').decode()
+                elif k in ['from_addr', 'to_addr']:
+                    obj[k] = codecs.decode(v, 'base64')
+                elif k in ['amount']:
+                    obj[k] = int(codecs.encode(codecs.decode(v, 'base64'), 'hex'), 16)
+        return obj
+
     def sign_tx(self, tx):
         """
         must call read_keys to read private key first
@@ -240,7 +262,7 @@ class XuperSDK(object):
         rsps = requests.post(self.url + "/v1/query_tx", data = json.dumps(payload))
         rsps_obj = json.loads(rsps.content)
         self.__check_error(rsps_obj)
-        return rsps_obj['tx']
+        return self.__format_obj(rsps_obj['tx'])
         
     def get_block(self, blockid):
         """
@@ -255,7 +277,7 @@ class XuperSDK(object):
         rsps = requests.post(self.url + "/v1/get_block", data = json.dumps(payload))
         rsps_obj = json.loads(rsps.content)
         self.__check_error(rsps_obj)
-        return rsps_obj['block']
+        return self.__format_obj(rsps_obj['block'])
 
     def system_status(self):
         """
@@ -267,7 +289,7 @@ class XuperSDK(object):
         rsps = requests.post(self.url + "/v1/get_sysstatus", data = json.dumps(payload))
         rsps_obj = json.loads(rsps.content)
         self.__check_error(rsps_obj)
-        return rsps_obj['systems_status']
+        return self.__format_obj(rsps_obj['systems_status'])
 
     def get_block_by_height(self, height):
         """
@@ -281,7 +303,7 @@ class XuperSDK(object):
         rsps = requests.post(self.url + "/v1/get_block_by_height", data = json.dumps(payload))
         rsps_obj = json.loads(rsps.content)
         self.__check_error(rsps_obj)
-        return rsps_obj['block']
+        return self.__format_obj(rsps_obj['block'])
 
 
     def invoke(self, contract, method, args, module="wasm"):

@@ -12,8 +12,9 @@ pysdk.readkeys("./data/keys")
 print(pysdk.system_status())
 
 #1. 普通转账
-pysdk.transfer("bob", 88888, desc="hello world")
+txid = pysdk.transfer("bob", 88888, desc="hello world")
 print(pysdk.balance("bob"))
+print(pysdk.query_tx(txid))
 
 #2. 创建合约账号
 new_account_name = pysdk.new_account()
@@ -23,6 +24,7 @@ print("new account:", new_account_name)
 
 #3. 部署合约
 pysdk.transfer(new_account_name, 10000000, desc="start funds")
+
 pysdk.set_account(new_account_name)
 contract_name = 'counter'+str(random.randint(100,1000000))
 print("contract name:", contract_name)
