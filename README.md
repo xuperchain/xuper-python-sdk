@@ -10,7 +10,9 @@
     pip install xuper
 
 ## start server
+    1.  启动xchain
     nohup ./xchain &
+    2.  启动http网关
     nohup ./xchain-httpgw &
 
 ## A wallet demo on python sdk
