@@ -365,7 +365,7 @@ class XuperSDK(object):
 
     def deploy(self, account_name, contract_name, code, init_args, runtime="c"):
         """
-        deploy a contract, only C runtime supported
+        deploy a contract, only C or Go runtime supported
         account_name: account name
         contract_name: contract name
         code: wasm binary
