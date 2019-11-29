@@ -334,7 +334,7 @@ class XuperSDK(object):
                     res_limit['type'] = ResTypeEnum[res_limit['type']]
                 if 'limit' in res_limit:
                     res_limit['limit'] = int(res_limit['limit'])
-        txid = self.transfer('$', int(fee)+10, '', contract_info)
+        txid = self.transfer('$', int(fee), '', contract_info)
         return InvokeResponse([base64.b64decode(x) for x in return_msg], int(fee), txid)
 
     def new_account(self, account_name=None, acl=None):
