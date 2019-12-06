@@ -82,10 +82,17 @@ class XuperSDK(object):
             s += "\n"
             s += go_style_dumps(tx_input['from_addr'])
             s += "\n"
-            s += go_style_dumps(tx_input['amount'])
-            s += "\n"
+            if tx_input['amount'] > 0:
+                s += go_style_dumps(tx_input['amount'])
+                s += "\n"
             s += go_style_dumps(tx_input.get("frozen_height",0))
             s += "\n"
+        for out_item in tx['tx_outputs']:
+            if 'amount' in out_item and len(out_item['amount']) == 0:
+                del out_item['amount']
+                toaddr = '$'
+                if base64.b64encode(toaddr) in out_item.values():
+                    del out_item['to_addr']
         s += go_style_dumps(tx['tx_outputs'])
         s += "\n"
         if len(tx['desc']) > 0:
