@@ -6,7 +6,7 @@ import time
 import random
 import json
 
-pysdk = xuper.XuperSDK("http://localhost:8089", "xuper")
+pysdk = xuper.XuperSDK("http://localhost:8098", "xuper")
 pysdk.readkeys("./data/keys")
 
 #0. 系统状态
