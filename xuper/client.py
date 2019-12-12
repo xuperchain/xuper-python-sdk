@@ -75,18 +75,19 @@ class XuperSDK(object):
 
     def __encodeTx(self, tx, include_sign = False):
         s = ""
-        for tx_input in tx['tx_inputs']:
-            s += go_style_dumps(tx_input['ref_txid'])   
-            s += "\n"
-            s += go_style_dumps(tx_input['ref_offset'])
-            s += "\n"
-            s += go_style_dumps(tx_input['from_addr'])
-            s += "\n"
-            if tx_input['amount'] > 0:
-                s += go_style_dumps(tx_input['amount'])
+        if tx['tx_inputs'] != None:
+            for tx_input in tx['tx_inputs']:
+                s += go_style_dumps(tx_input['ref_txid'])   
                 s += "\n"
-            s += go_style_dumps(tx_input.get("frozen_height",0))
-            s += "\n"
+                s += go_style_dumps(tx_input['ref_offset'])
+                s += "\n"
+                s += go_style_dumps(tx_input['from_addr'])
+                s += "\n"
+                if tx_input['amount'] > 0:
+                    s += go_style_dumps(tx_input['amount'])
+                    s += "\n"
+                s += go_style_dumps(tx_input.get("frozen_height",0))
+                s += "\n"
         for out_item in tx['tx_outputs']:
             if 'amount' in out_item and len(out_item['amount']) == 0:
                 del out_item['amount']
@@ -428,16 +429,21 @@ class XuperSDK(object):
         selected_obj = json.loads(select_response.content)  
         self.__check_error(selected_obj)
         tx = json.loads(TxTemplate)
-        #pprint(selected_obj)
-        tx['tx_inputs'] = selected_obj['utxoList']
-        for x in tx['tx_inputs']:
-            x['ref_txid'] = x['refTxid']
-            x['ref_offset'] = x.get('refOffset', 0)
-            x['from_addr'] = base64.b64encode(self.__my_address().encode()).decode()
-            del x['refTxid']
-            del x['toAddr']
-            if 'refOffset' in x:
-                del x['refOffset']
+        pprint(selected_obj)
+        if 'utxoList' in selected_obj:
+            tx['tx_inputs'] = selected_obj['utxoList']
+        else:
+            tx['tx_inputs'] = None
+       
+        if tx['tx_inputs'] != None:
+            for x in tx['tx_inputs']:
+                x['ref_txid'] = x['refTxid']
+                x['ref_offset'] = x.get('refOffset', 0)
+                x['from_addr'] = base64.b64encode(self.__my_address().encode()).decode()
+                del x['refTxid']
+                del x['toAddr']
+                if 'refOffset' in x:
+                    del x['refOffset']
         total_selected = int(selected_obj['totalSelected'])
         output_return = total_selected - amount
         tx['tx_outputs'].append(
