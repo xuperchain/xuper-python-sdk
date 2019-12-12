@@ -4,6 +4,7 @@
 import xuper
 import time
 import random
+import json
 
 pysdk = xuper.XuperSDK("http://localhost:8098", "xuper")
 pysdk.readkeys("./data/keys")
@@ -14,6 +15,14 @@ print(pysdk.system_status())
 #1. 普通转账
 txid = pysdk.transfer("bob", 88888, desc="hello world")
 print(pysdk.balance("bob"))
+print(pysdk.query_tx(txid))
+
+#2. 存证上链(不涉及UTXO，对应xuperunion > v3.4)
+#a. 读取文件
+with open('./data/evidence/demo.json', 'r') as f:
+    data = json.load(f)
+#b. 文件反序列化
+txid = pysdk.transfer("bob", 0, desc=str(data))
 print(pysdk.query_tx(txid))
 
 #2. 创建合约账号
