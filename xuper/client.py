@@ -429,7 +429,7 @@ class XuperSDK(object):
         selected_obj = json.loads(select_response.content)  
         self.__check_error(selected_obj)
         tx = json.loads(TxTemplate)
-        pprint(selected_obj)
+        #pprint(selected_obj)
         if 'utxoList' in selected_obj:
             tx['tx_inputs'] = selected_obj['utxoList']
         else:
